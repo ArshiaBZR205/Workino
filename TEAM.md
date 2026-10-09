@@ -1,4 +1,4 @@
 # Team Members
 
-- Mohammadreza Cheraghi
+- Mohammad Cheraghi
 - Arshia Bazargan
