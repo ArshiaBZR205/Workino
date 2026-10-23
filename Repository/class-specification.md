@@ -1,67 +1,67 @@
 
-# Class Specification — ورکینو
+# Class Specification
 
-## Customer
+در این بخش، مسئولیت، ویژگی‌ها، متدها و روابط هر کلاس مشخص شده است.
 
-| بخش | توضیح |
+## 1. Customer
+
+| مورد | توضیحات |
 |---|---|
-| مسئولیت | ثبت درخواست خدمات و پیگیری آن‌ها |
+| مسئولیت | ثبت درخواست خدمات و ثبت نظر درباره متخصص |
 | ویژگی‌ها | id, full_name, email, phone, password_hash, address, is_active |
-| متدها | register(), login(), logout(), createRequest(), viewRequests(), submitReview() |
-| روابط | هر مشتری می‌تواند چند درخواست و چند نظر داشته باشد. |
+| متدها | register(), login(), updateProfile(), createRequest(), addReview() |
+| روابط | Customer 1:N ServiceRequest, Customer 1:N Review |
 
-## Specialist
+## 2. Specialist
 
-| بخش | توضیح |
+| مورد | توضیحات |
 |---|---|
-| مسئولیت | ارائه‌ی خدمات و مدیریت درخواست‌های دریافتی |
+| مسئولیت | مدیریت اطلاعات تخصصی، دریافت درخواست و تعیین زمان‌های در دسترس |
 | ویژگی‌ها | id, full_name, email, phone, password_hash, bio, skills, service_area, estimated_rate, is_active |
-| متدها | register(), login(), logout(), viewRequests(), acceptRequest(), rejectRequest(), updateProfile() |
-| روابط | هر متخصص می‌تواند چند درخواست، نظر و بازه‌ی زمانی داشته باشد و در چند دسته‌بندی فعالیت کند. |
+| متدها | register(), login(), updateProfile(), acceptRequest(), rejectRequest(), updateAvailability() |
+| روابط | Specialist 1:N ServiceRequest, Specialist 1:N Review, Specialist 1:N AvailabilitySlot, Specialist N:M ServiceCategory |
 
-## Admin
+## 3. Admin
 
-| بخش | توضیح |
+| مورد | توضیحات |
 |---|---|
-| مسئولیت | مدیریت کاربران و دسته‌بندی خدمات |
+| مسئولیت | مدیریت کاربران، متخصصان و دسته‌بندی خدمات |
 | ویژگی‌ها | id, full_name, email, password_hash, is_active |
-| متدها | login(), logout(), manageUsers(), manageCategories(), viewStatistics() |
-| روابط | مدیریت حساب مشتریان، متخصصان و دسته‌بندی‌های خدمات |
+| متدها | login(), manageCustomers(), manageSpecialists(), manageCategories() |
+| روابط | — |
 
-## ServiceCategory
+## 4. ServiceCategory
 
-| بخش | توضیح |
+| مورد | توضیحات |
 |---|---|
-| مسئولیت | دسته‌بندی خدمات قابل ارائه |
+| مسئولیت | دسته‌بندی خدمات قابل ارائه در سیستم |
 | ویژگی‌ها | id, name, description |
-| متدها | addCategory(), updateCategory(), deleteCategory() |
-| روابط | هر دسته‌بندی می‌تواند چند درخواست و چند متخصص داشته باشد. |
+| متدها | create(), update(), delete() |
+| روابط | ServiceCategory 1:N ServiceRequest, Specialist N:M ServiceCategory |
 
-## ServiceRequest
+## 5. ServiceRequest
 
-| بخش | توضیح |
+| مورد | توضیحات |
 |---|---|
-| مسئولیت | نگهداری و پیگیری درخواست‌های خدمات |
+| مسئولیت | نگهداری اطلاعات درخواست خدمات و وضعیت آن |
 | ویژگی‌ها | id, customer_id, specialist_id, category_id, description, location, budget, requested_at, status |
-| متدها | assignSpecialist(), updateStatus(), cancelRequest() |
-| روابط | هر درخواست متعلق به یک مشتری و یک دسته‌بندی است. تخصیص متخصص اختیاری است. هر درخواست می‌تواند حداکثر یک نظر داشته باشد. |
-| نوع وضعیت | `RequestStatus (enum)` |
-| مقادیر وضعیت | PENDING, ACCEPTED, REJECTED, COMPLETED, CANCELLED |
+| متدها | create(), assignSpecialist(), accept(), reject(), complete(), cancel() |
+| روابط | Customer 1:N ServiceRequest, Specialist 1:N ServiceRequest, ServiceCategory 1:N ServiceRequest, ServiceRequest 1:0..1 Review |
 
-## Review
+## 6. Review
 
-| بخش | توضیح |
+| مورد | توضیحات |
 |---|---|
-| مسئولیت | ثبت امتیاز و نظر مشتری درباره‌ی متخصص |
+| مسئولیت | ثبت امتیاز و نظر مشتری درباره متخصص |
 | ویژگی‌ها | id, customer_id, specialist_id, request_id, rating, comment, created_at |
-| متدها | submitReview(), updateReview() |
-| روابط | هر نظر به یک مشتری، یک متخصص و یک درخواست مربوط است. |
+| متدها | create(), update(), delete() |
+| روابط | Customer 1:N Review, Specialist 1:N Review, ServiceRequest 1:0..1 Review |
 
-## AvailabilitySlot
+## 7. AvailabilitySlot
 
-| بخش | توضیح |
+| مورد | توضیحات |
 |---|---|
-| مسئولیت | ثبت زمان‌های در دسترس بودن متخصص |
+| مسئولیت | نگهداری زمان‌های در دسترس متخصص |
 | ویژگی‌ها | id, specialist_id, start_time, end_time, is_available |
-| متدها | addSlot(), updateSlot(), removeSlot() |
-| روابط | هر بازه‌ی زمانی متعلق به یک متخصص است و هر متخصص می‌تواند چند بازه داشته باشد. |
+| متدها | create(), update(), delete(), setAvailability() |
+| روابط | Specialist 1:N AvailabilitySlot |
