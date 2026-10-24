@@ -198,12 +198,12 @@
 
 ## ۸. نمونهٔ Queryها
 
-### ۸.۱ لیست محصولات یک دسته
+### ۸.۱ لیست خدمات یک دسته
 
 ```sql
 SELECT p.id, p.name, p.price, p.stock
-FROM products p
-JOIN categories c ON p.category_id = c.id
+FROM services s
+JOIN categories c ON s.category_id = s.id
 WHERE c.slug = 'yakhchal';
 SELECT o.id, o.total_price, o.status, o.created_at
 FROM orders o
@@ -219,4 +219,4 @@ ORDER BY date DESC;
 ---
 
 نسخه	تاریخ	تغییرات	تهیه‌کننده
-۱.۰	۱۴۰۴	نسخهٔ اولیه	ابراهیم فضلی
+1.0 1405 نسخه اولیه تیم ورکینو
