@@ -1,9 +1,9 @@
-#  سند طرح دیتابیس - ورکینو
+# سند طرح دیتابیس - ورکینو
 
 | | |
 |---|---|
-| **نام پروژه** | ورکینو (workino) |
-| **نسخهٔ سند** | 1.0|
+| **نام پروژه** | ورکینو (Workino) |
+| **نسخه سند** | 1.0 |
 | **تاریخ** | 1405 |
 | **تهیه‌کننده** | تیم ورکینو |
 | **وضعیت** | پیش‌نویس |
@@ -13,210 +13,354 @@
 ## ۱. مقدمه
 
 ### ۱.۱ هدف سند
-این سند طرح دیتابیس پروژهٔ ورکینو را تعریف می‌کند.
-شامل جداول، روابط، ایندکس‌ها و تصمیم‌های طراحی.
+
+هدف این سند، تعریف ساختار دیتابیس پروژه ورکینو است.
+این سند شامل جدول‌ها، ستون‌ها، کلیدهای اصلی و خارجی، روابط، ایندکس‌ها و تصمیم‌های طراحی دیتابیس است.
 
 ### ۱.۲ دامنه
-- **در دامنه:** ساختار جداول، روابط، ایندکس‌ها.
-- **خارج از دامنه:** Queryهای خاص، Optimization.
+
+- **در دامنه:** ساختار جدول‌ها، روابط، کلیدهای اصلی و خارجی، ایندکس‌ها و نرمال‌سازی.
+- **خارج از دامنه:** پیاده‌سازی Queryهای پیچیده و بهینه‌سازی پیشرفته دیتابیس.
 
 ---
 
 ## ۲. نمای کلی
 
 ### ۲.۱ DBMS انتخاب‌شده
+
 **PostgreSQL 16**
 
-**دلیل:**
-- Relational و قدرتمند
-- پشتیبانی از JSON
-- رایگان و اوپن‌سورس
-- جامعهٔ بزرگ
+**دلایل انتخاب:**
+- پشتیبانی از ساختار رابطه‌ای و ارتباط بین جدول‌ها
+- پشتیبانی از انواع داده مختلف
+- پایداری و قابلیت اطمینان
+- رایگان و متن‌باز بودن
+- پشتیبانی از کلیدهای خارجی و محدودیت‌های داده
 
-### ۲.۲ ERD — نمای کلی
+### ۲.۲ موجودیت‌های اصلی
 
-┌─────────────┐       ┌─────────────┐
-│   users     │       │  customers  │
-│  (admin)    │       │             │
-└─────────────┘       └──────┬──────┘
-                             │
-                             │ 1:N
-                             ▼
-┌─────────────┐       ┌─────────────┐
-│ categories  │──1:N──│   orders    │
-└──────┬──────┘       └──────┬──────┘
-       │                     │
-       │ 1:N                 │ 1:N
-       ▼                     ▼
-┌─────────────┐       ┌─────────────┐
-│ services │──N:M──│selected_services│
-└─────────────┘       └─────────────┘
+دیتابیس ورکینو شامل جدول‌های زیر است:
+
+| جدول | توضیحات |
+|---|---|
+| customers | اطلاعات مشتریان |
+| specialists | اطلاعات متخصصان |
+| admins | اطلاعات مدیران سایت |
+| service_categories | دسته‌بندی خدمات |
+| specialist_categories | ارتباط متخصصان با دسته‌بندی‌ها |
+| service_requests | درخواست‌های ثبت‌شده توسط مشتریان |
+| quotes | پیشنهادهای قیمت متخصصان |
+| reviews | امتیازها و نظرات مشتریان |
+| availability_slots | زمان‌های در دسترس متخصصان |
+| complaints | شکایت‌های ثبت‌شده |
+| notifications | اعلان‌های ارسال‌شده به متخصصان |
+
+### ۲.۳ روابط کلی
+
+- هر مشتری می‌تواند چند درخواست خدمات ثبت کند.
+- هر دسته‌بندی می‌تواند شامل چند درخواست خدمات باشد.
+- هر درخواست می‌تواند چند پیشنهاد قیمت دریافت کند.
+- هر متخصص می‌تواند چند پیشنهاد قیمت ارسال کند.
+- هر متخصص می‌تواند در چند دسته‌بندی فعالیت داشته باشد.
+- هر مشتری می‌تواند چند نظر و شکایت ثبت کند.
+- هر متخصص می‌تواند چند نظر دریافت کند.
+- هر درخواست می‌تواند حداکثر یک نظر داشته باشد.
+- هر متخصص می‌تواند چند بازه زمانی در دسترس داشته باشد.
+- هر درخواست می‌تواند چند شکایت و اعلان مرتبط داشته باشد.
 
 ---
 
 ## ۳. جداول
 
-### ۳.۱ جدول `users` (ادمین‌ها)
+### ۳.۱ جدول `customers` (مشتریان)
 
 | ستون | نوع | توضیح |
-|------|------|-------|
-| id | SERIAL PRIMARY KEY | شناسه |
+|---|---|---|
+| id | SERIAL PRIMARY KEY | شناسه مشتری |
+| full_name | VARCHAR(150) | نام و نام خانوادگی |
 | email | VARCHAR(255) UNIQUE | ایمیل |
-| password_hash | VARCHAR(255) | رمزنگاری‌شده |
-| name | VARCHAR(100) | نام |
-| role | VARCHAR(20) | admin / warehouse |
-| created_at | TIMESTAMP | تاریخ ایجاد |
-
-### ۳.۲ جدول `customers` (مشتریان)
-
-| ستون | نوع | توضیح |
-|------|------|-------|
-| id | SERIAL PRIMARY KEY | شناسه |
-| name | VARCHAR(100) | نام |
-| phone | VARCHAR(20) | تلفن |
-| email | VARCHAR(255) | ایمیل |
+| phone | VARCHAR(20) | شماره تلفن |
+| password_hash | VARCHAR(255) | رمز عبور هش‌شده |
 | address | TEXT | آدرس |
-| created_at | TIMESTAMP | تاریخ ایجاد |
+| is_active | BOOLEAN | وضعیت فعال بودن حساب |
+| created_at | TIMESTAMP | تاریخ ایجاد حساب |
 
-### ۳.۳ جدول `categories` (دسته‌بندی‌ها)
-
-| ستون | نوع | توضیح |
-|------|------|-------|
-| id | SERIAL PRIMARY KEY | شناسه |
-| name | VARCHAR(100) | نام |
-| slug | VARCHAR(100) UNIQUE | شناسهٔ URL |
-| parent_id | INTEGER | دستهٔ والد (اختیاری) |
-
-### ۳.۴ جدول `services` (خدمات)
+### ۳.۲ جدول `specialists` (متخصصان)
 
 | ستون | نوع | توضیح |
-|------|------|-------|
-| id | SERIAL PRIMARY KEY | شناسه |
-| name | VARCHAR(255) | نام خدمات |
-| description | TEXT | توضیحات |
-| price | DECIMAL(12,0) | قیمت (ریال) |
-| stock | INTEGER | موجودی |
-| brand | VARCHAR(100) | برند |
-| category_id | INTEGER FK | دسته‌بندی |
-| image_url | VARCHAR(500) | تصویر |
-| created_at | TIMESTAMP | تاریخ ایجاد |
+|---|---|---|
+| id | SERIAL PRIMARY KEY | شناسه متخصص |
+| full_name | VARCHAR(150) | نام و نام خانوادگی |
+| email | VARCHAR(255) UNIQUE | ایمیل |
+| phone | VARCHAR(20) | شماره تلفن |
+| password_hash | VARCHAR(255) | رمز عبور هش‌شده |
+| bio | TEXT | معرفی و توضیحات متخصص |
+| skills | TEXT | مهارت‌های متخصص |
+| service_area | VARCHAR(255) | محدوده ارائه خدمات |
+| estimated_rate | DECIMAL(12,0) | اجرت تخمینی |
+| is_active | BOOLEAN | وضعیت فعال بودن حساب |
+| created_at | TIMESTAMP | تاریخ ایجاد حساب |
 
-### ۳.۵ جدول `orders` (سفارش‌ها)
-
-| ستون | نوع | توضیح |
-|------|------|-------|
-| id | SERIAL PRIMARY KEY | شناسه |
-| customer_id | INTEGER FK | مشتری |
-| total_price | DECIMAL(12,0) | مبلغ کل |
-| status | VARCHAR(20) | pending / shipped / delivered |
-| address | TEXT | آدرس تحویل |
-| created_at | TIMESTAMP | تاریخ ثبت |
-
-### ۳.۶ جدول `selected_services` (خدمات انتخاب شده)
+### ۳.۳ جدول `admins` (مدیران سایت)
 
 | ستون | نوع | توضیح |
-|------|------|-------|
-| id | SERIAL PRIMARY KEY | شناسه |
-| order_id | INTEGER FK | سفارش |
-| product_id | INTEGER FK | خدمات |
-| quantity | INTEGER | تعداد |
-| unit_price | DECIMAL(12,0) | قیمت واحد |
+|---|---|---|
+| id | SERIAL PRIMARY KEY | شناسه مدیر |
+| full_name | VARCHAR(150) | نام و نام خانوادگی |
+| email | VARCHAR(255) UNIQUE | ایمیل |
+| password_hash | VARCHAR(255) | رمز عبور هش‌شده |
+| is_active | BOOLEAN | وضعیت فعال بودن حساب |
+| created_at | TIMESTAMP | تاریخ ایجاد حساب |
+
+### ۳.۴ جدول `service_categories` (دسته‌بندی خدمات)
+
+| ستون | نوع | توضیح |
+|---|---|---|
+| id | SERIAL PRIMARY KEY | شناسه دسته‌بندی |
+| name | VARCHAR(100) | نام دسته‌بندی |
+| description | TEXT | توضیحات دسته‌بندی |
+
+### ۳.۵ جدول `specialist_categories` (ارتباط متخصصان و دسته‌بندی‌ها)
+
+این جدول برای پیاده‌سازی رابطه چندبه‌چند بین متخصصان و دسته‌بندی خدمات استفاده می‌شود.
+
+| ستون | نوع | توضیح |
+|---|---|---|
+| specialist_id | INTEGER FK | شناسه متخصص |
+| category_id | INTEGER FK | شناسه دسته‌بندی |
+
+**کلید اصلی مرکب:** `(specialist_id, category_id)`
+
+### ۳.۶ جدول `service_requests` (درخواست‌های خدمات)
+
+| ستون | نوع | توضیح |
+|---|---|---|
+| id | SERIAL PRIMARY KEY | شناسه درخواست |
+| customer_id | INTEGER FK | شناسه مشتری |
+| category_id | INTEGER FK | شناسه دسته‌بندی |
+| description | TEXT | توضیحات درخواست |
+| location | TEXT | محل انجام خدمات |
+| budget | DECIMAL(12,0) | بودجه پیشنهادی مشتری |
+| requested_at | TIMESTAMP | زمان ثبت درخواست |
+| status | VARCHAR(20) | وضعیت درخواست |
+
+**مقادیر مجاز status:**
+- pending
+- in_progress
+- completed
+- cancelled
+
+### ۳.۷ جدول `quotes` (پیشنهادهای قیمت)
+
+این جدول پیشنهادهای قیمت متخصصان برای درخواست‌های ثبت‌شده را نگهداری می‌کند.
+
+| ستون | نوع | توضیح |
+|---|---|---|
+| id | SERIAL PRIMARY KEY | شناسه پیشنهاد |
+| request_id | INTEGER FK | شناسه درخواست |
+| specialist_id | INTEGER FK | شناسه متخصص |
+| proposed_price | DECIMAL(12,0) | قیمت پیشنهادی |
+| description | TEXT | توضیحات پیشنهاد |
+| created_at | TIMESTAMP | زمان ثبت پیشنهاد |
+| status | VARCHAR(20) | وضعیت پیشنهاد |
+
+**مقادیر مجاز status:**
+- pending
+- accepted
+- rejected
+
+### ۳.۸ جدول `reviews` (نظرات و امتیازها)
+
+| ستون | نوع | توضیح |
+|---|---|---|
+| id | SERIAL PRIMARY KEY | شناسه نظر |
+| customer_id | INTEGER FK | شناسه مشتری |
+| specialist_id | INTEGER FK | شناسه متخصص |
+| request_id | INTEGER FK UNIQUE | شناسه درخواست |
+| rating | SMALLINT | امتیاز مشتری |
+| comment | TEXT | متن نظر |
+| created_at | TIMESTAMP | زمان ثبت نظر |
+
+### ۳.۹ جدول `availability_slots` (زمان‌های در دسترس)
+
+| ستون | نوع | توضیح |
+|---|---|---|
+| id | SERIAL PRIMARY KEY | شناسه بازه زمانی |
+| specialist_id | INTEGER FK | شناسه متخصص |
+| start_time | TIMESTAMP | زمان شروع |
+| end_time | TIMESTAMP | زمان پایان |
+| is_available | BOOLEAN | وضعیت در دسترس بودن |
+
+### ۳.۱۰ جدول `complaints` (شکایت‌ها)
+
+| ستون | نوع | توضیح |
+|---|---|---|
+| id | SERIAL PRIMARY KEY | شناسه شکایت |
+| customer_id | INTEGER FK | شناسه مشتری |
+| specialist_id | INTEGER FK | شناسه متخصص |
+| request_id | INTEGER FK | شناسه درخواست |
+| description | TEXT | توضیحات شکایت |
+| status | VARCHAR(20) | وضعیت شکایت |
+| created_at | TIMESTAMP | زمان ثبت شکایت |
+
+**مقادیر مجاز status:**
+- pending
+- reviewed
+- resolved
+
+### ۳.۱۱ جدول `notifications` (اعلان‌ها)
+
+| ستون | نوع | توضیح |
+|---|---|---|
+| id | SERIAL PRIMARY KEY | شناسه اعلان |
+| specialist_id | INTEGER FK | شناسه متخصص دریافت‌کننده |
+| request_id | INTEGER FK | شناسه درخواست مرتبط |
+| message | TEXT | متن اعلان |
+| is_read | BOOLEAN | وضعیت خوانده شدن |
+| created_at | TIMESTAMP | زمان ایجاد اعلان |
 
 ---
 
-## ۴. روابط
+## ۴. روابط بین جدول‌ها
 
-### ۴.۱ یک‌به‌چند (1:N)
-
-| رابطه | توضیح |
-|--------|-------|
-| categories → products | هر دسته چند سفارش دارد |
-| customers → orders | هر مشتری چند سفارش دارد |
-| orders → order_items | هر سفارش چند قلم دارد |
-
-### ۴.۲ چند‌به‌چند (N:M)
+### ۴.۱ روابط یک‌به‌چند (1:N)
 
 | رابطه | توضیح |
-|--------|-------|
-| orders ↔ products | از طریق selected_services |
+|---|---|
+| customers → service_requests | هر مشتری می‌تواند چند درخواست ثبت کند. |
+| service_categories → service_requests | هر دسته‌بندی می‌تواند شامل چند درخواست باشد. |
+| service_requests → quotes | هر درخواست می‌تواند چند پیشنهاد قیمت دریافت کند. |
+| specialists → quotes | هر متخصص می‌تواند چند پیشنهاد قیمت ارسال کند. |
+| customers → reviews | هر مشتری می‌تواند چند نظر ثبت کند. |
+| specialists → reviews | هر متخصص می‌تواند چند نظر دریافت کند. |
+| specialists → availability_slots | هر متخصص می‌تواند چند بازه زمانی ثبت کند. |
+| customers → complaints | هر مشتری می‌تواند چند شکایت ثبت کند. |
+| specialists → complaints | هر متخصص می‌تواند چند شکایت دریافت کند. |
+| service_requests → complaints | هر درخواست می‌تواند چند شکایت داشته باشد. |
+| specialists → notifications | هر متخصص می‌تواند چند اعلان دریافت کند. |
+| service_requests → notifications | هر درخواست می‌تواند چند اعلان مرتبط داشته باشد. |
+
+### ۴.۲ روابط چندبه‌چند (N:M)
+
+| رابطه | جدول واسط | توضیح |
+|---|---|---|
+| specialists ↔ service_categories | specialist_categories | هر متخصص می‌تواند در چند دسته‌بندی فعالیت کند و هر دسته‌بندی می‌تواند شامل چند متخصص باشد. |
+
+### ۴.۳ روابط یک‌به‌یک یا یک‌به‌صفر و یک
+
+| رابطه | توضیح |
+|---|---|
+| service_requests → reviews | هر درخواست می‌تواند حداکثر یک نظر داشته باشد. |
 
 ---
 
-## ۵. ایندکس‌ها
+## ۵. کلیدهای اصلی و خارجی
 
-### ۵.۱ Primary Keys
-- همهٔ جداول: `id`
+### ۵.۱ کلیدهای اصلی (Primary Keys)
 
-### ۵.۲ Foreign Keys
-- `products.category_id` → `categories.id`
-- `orders.customer_id` → `customers.id`
-- `order_items.order_id` → `orders.id`
-- `order_items.product_id` → `products.id`
+- جدول‌های customers، specialists، admins، service_categories، service_requests، quotes، reviews، availability_slots، complaints و notifications دارای ستون `id` به‌عنوان کلید اصلی هستند.
+- جدول specialist_categories دارای کلید اصلی مرکب `(specialist_id, category_id)` است.
 
-### ۵.۳ ایندکس‌های اضافی
+### ۵.۲ کلیدهای خارجی (Foreign Keys)
+
+| جدول | ستون | جدول مرجع |
+|---|---|---|
+| specialist_categories | specialist_id | specialists.id |
+| specialist_categories | category_id | service_categories.id |
+| service_requests | customer_id | customers.id |
+| service_requests | category_id | service_categories.id |
+| quotes | request_id | service_requests.id |
+| quotes | specialist_id | specialists.id |
+| reviews | customer_id | customers.id |
+| reviews | specialist_id | specialists.id |
+| reviews | request_id | service_requests.id |
+| availability_slots | specialist_id | specialists.id |
+| complaints | customer_id | customers.id |
+| complaints | specialist_id | specialists.id |
+| complaints | request_id | service_requests.id |
+| notifications | specialist_id | specialists.id |
+| notifications | request_id | service_requests.id |
+
+---
+
+## ۶. ایندکس‌ها
+
+### ۶.۱ ایندکس‌های اصلی
+
+کلیدهای اصلی و ستون‌های دارای محدودیت UNIQUE به‌صورت خودکار ایندکس می‌شوند.
+
+### ۶.۲ ایندکس‌های اضافی
 
 | جدول | ستون | دلیل |
-|------|------|-------|
-| products | name | جست‌وجو |
-| products | category_id | فیلتر |
-| orders | customer_id | پیگیری |
-| orders | status | گزارش |
+|---|---|---|
+| customers | email | جست‌وجوی مشتری |
+| specialists | email | جست‌وجوی متخصص |
+| specialists | service_area | فیلتر بر اساس محدوده خدمات |
+| service_requests | customer_id | مشاهده درخواست‌های مشتری |
+| service_requests | category_id | فیلتر درخواست‌ها بر اساس دسته‌بندی |
+| service_requests | status | فیلتر بر اساس وضعیت درخواست |
+| quotes | request_id | مشاهده پیشنهادهای یک درخواست |
+| quotes | specialist_id | مشاهده پیشنهادهای متخصص |
+| reviews | specialist_id | مشاهده نظرات متخصص |
+| complaints | status | بررسی شکایت‌ها |
+| notifications | specialist_id | مشاهده اعلان‌های متخصص |
 
 ---
 
-## ۶. نرمال‌سازی
+## ۷. نرمال‌سازی
 
-### ۶.۱ 1NF — حذف گروه‌های تکراری
-- هر ستون یک مقدار اتمی دارد
-- هیچ ستون چندمقداری نیست
+### ۷.۱ فرم نرمال اول (1NF)
 
-### ۶.۲ 2NF — حذف وابستگی جزئی
-- همهٔ ستون‌های غیرکلیدی به کل Primary Key وابسته‌اند
+- هر ستون یک مقدار مشخص و اتمی دارد.
+- اطلاعات چندمقداری در یک ستون ذخیره نمی‌شوند.
+- برای ارتباط چندبه‌چند متخصصان و دسته‌بندی‌ها از جدول واسط استفاده شده است.
 
-### ۶.۳ 3NF — حذف وابستگی انتقالی
-- هیچ ستون غیرکلیدی به ستون غیرکلیدی دیگر وابسته نیست
+### ۷.۲ فرم نرمال دوم (2NF)
 
-**نتیجه:** دیتابیس تا 3NF نرمال است.
+- تمام ستون‌های غیرکلیدی به کلید اصلی وابسته هستند.
+- در جدول specialist_categories هیچ وابستگی جزئی به بخشی از کلید مرکب وجود ندارد.
 
----
+### ۷.۳ فرم نرمال سوم (3NF)
 
-## ۷. امنیت داده
+- ستون‌های غیرکلیدی به ستون‌های غیرکلیدی دیگر وابستگی انتقالی ندارند.
+- اطلاعات مشتریان، متخصصان، درخواست‌ها و پیشنهادهای قیمت در جدول‌های جداگانه نگهداری می‌شوند.
 
-### ۷.۱ رمزنگاری
-- گذرواژه‌ها با **bcrypt**
-- ارتباط با DB با **SSL**
-
-### ۷.۲ Backup
-- **روزانه** به S3 یا فضای ابری
-- نگهداری ۳۰ روز
-
-### ۷.۳ دسترسی
-- کاربر DB با حداقل دسترسی
-- لاگ همهٔ Queryهای حساس
+**نتیجه:** ساختار پیشنهادی دیتابیس با هدف رعایت اصول نرمال‌سازی تا فرم نرمال سوم (3NF) طراحی شده است.
 
 ---
 
-## ۸. نمونهٔ Queryها
+## ۸. امنیت داده‌ها
 
-### ۸.۱ لیست خدمات یک دسته
+### ۸.۱ رمز عبور
+
+- رمزهای عبور به‌صورت هش‌شده ذخیره می‌شوند.
+- از الگوریتم‌های امن هش رمز عبور مانند bcrypt استفاده می‌شود.
+- رمز عبور خام در دیتابیس ذخیره نمی‌شود.
+
+### ۸.۲ ارتباط با دیتابیس
+
+- در محیط عملیاتی، ارتباط با دیتابیس باید از طریق اتصال امن برقرار شود.
+- دسترسی کاربران دیتابیس باید متناسب با مسئولیت آن‌ها محدود شود.
+
+### ۸.۳ پشتیبان‌گیری
+
+- تهیه نسخه پشتیبان به‌صورت منظم توصیه می‌شود.
+- نسخه‌های پشتیبان باید در محل امن نگهداری شوند.
+
+### ۸.۴ کنترل دسترسی
+
+- دسترسی به اطلاعات بر اساس نقش کاربران کنترل می‌شود.
+- مدیر سایت امکان مدیریت کاربران و بررسی شکایت‌ها را دارد.
+- مشتری و متخصص فقط به امکانات و اطلاعات مجاز خود دسترسی دارند.
+
+---
+
+## ۹. نمونه Queryها
+
+### ۹.۱ مشاهده درخواست‌های یک مشتری
 
 ```sql
-SELECT p.id, p.name, p.price, p.stock
-FROM services s
-JOIN categories c ON s.category_id = s.id
-WHERE c.slug = 'yakhchal';
-SELECT o.id, o.total_price, o.status, o.created_at
-FROM orders o
-WHERE o.customer_id = 5
-ORDER BY o.created_at DESC;
-SELECT DATE(created_at) as date, COUNT(*) as orders, SUM(total_price) as 
-revenue
-FROM orders
-WHERE status = 'delivered'
-GROUP BY DATE(created_at)
-ORDER BY date DESC;
-
----
-
-نسخه	تاریخ	تغییرات	تهیه‌کننده
- 1.0    1405    تیم ورکینو   نسخه اولیه
+SELECT id, description, location, budget, status, requested_at
+FROM service_requests
+WHERE customer_id = 1
+ORDER BY requested_at DESC;
